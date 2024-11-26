@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: webserver
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: webserver
+  replicas: 1 
+  template: 
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: webserver-container
+        image: testacr73.azurecr.io/webserver:latest
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "0.2"
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: test-azure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver-service
+  namespace: test-first
+  labels:
+    app: webserver
+  #annotations:
+  #  service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: webserver
+  type: NodePort
